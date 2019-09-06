@@ -121,6 +121,7 @@ public abstract class KafkaHeaders {
 	public static final String BATCH_CONVERTED_HEADERS = PREFIX + "batchConvertedHeaders";
 
 	/**
+	 * 包含关联请求/答复的信息头。
 	 * The header containing information to correlate requests/replies.
 	 * Type: byte[].
 	 * @since 2.1.3

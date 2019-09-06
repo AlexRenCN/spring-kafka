@@ -19,6 +19,7 @@ package org.springframework.kafka.core;
 import org.apache.kafka.clients.producer.Producer;
 
 /**
+ * 生成生产者的工厂
  * The strategy to produce a {@link Producer} instance(s).
  *
  * @param <K> the key type.
@@ -29,12 +30,14 @@ import org.apache.kafka.clients.producer.Producer;
 public interface ProducerFactory<K, V> {
 
 	/**
+	 * 创建一个生产者
 	 * Create a producer.
 	 * @return the producer.
 	 */
 	Producer<K, V> createProducer();
 
 	/**
+	 * 使用事务ID创建生产者
 	 * Create a producer with an overridden transaction id prefix.
 	 * @param txIdPrefix the transaction id prefix.
 	 * @return the producer.
@@ -45,6 +48,7 @@ public interface ProducerFactory<K, V> {
 	}
 
 	/**
+	 * 是否支持事务
 	 * Return true if the factory supports transactions.
 	 * @return true if transactional.
 	 */
@@ -53,6 +57,7 @@ public interface ProducerFactory<K, V> {
 	}
 
 	/**
+	 * 从缓存中移除指定的生产者并将其关闭
 	 * Remove the specified producer from the cache and close it.
 	 * @param transactionIdSuffix the producer's transaction id suffix.
 	 * @since 1.3.8
@@ -71,6 +76,7 @@ public interface ProducerFactory<K, V> {
 	}
 
 	/**
+	 * 如果工厂实现使用线程绑定的生产者，调用此方法去关闭和释放线程工厂
 	 * If the factory implementation uses thread-bound producers, call this method to
 	 * close and release this thread's producer.
 	 * @since 2.3

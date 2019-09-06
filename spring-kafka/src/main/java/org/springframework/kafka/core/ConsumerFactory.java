@@ -25,6 +25,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.lang.Nullable;
 
 /**
+ * 消费者工厂类
  * The strategy to produce a {@link Consumer} instance(s).
  *
  * @param <K> the key type.
@@ -36,6 +37,7 @@ import org.springframework.lang.Nullable;
 public interface ConsumerFactory<K, V> {
 
 	/**
+	 * 创建一个消费者，使用配置中的组id和客户端id
 	 * Create a consumer with the group id and client id as configured in the properties.
 	 * @return the consumer.
 	 */
@@ -44,6 +46,7 @@ public interface ConsumerFactory<K, V> {
 	}
 
 	/**
+	 * 创建一个消费者，使用配置中的组id，在配置的客户端id后追加后缀
 	 * Create a consumer, appending the suffix to the {@code client.id} property,
 	 * if present.
 	 * @param clientIdSuffix the suffix.
@@ -55,6 +58,7 @@ public interface ConsumerFactory<K, V> {
 	}
 
 	/**
+	 * 创建一个消费者，使用指定的组id，在配置的客户端id后追加后缀
 	 * Create a consumer with an explicit group id; in addition, the
 	 * client id suffix is appended to the {@code client.id} property, if both
 	 * are present.
@@ -68,6 +72,7 @@ public interface ConsumerFactory<K, V> {
 	}
 
 	/**
+	 * 创建一个消费者，使用指定的组id，在配置的客户端id后追加前缀和后缀
 	 * Create a consumer with an explicit group id; in addition, the
 	 * client id suffix is appended to the clientIdPrefix which overrides the
 	 * {@code client.id} property, if present.
@@ -81,6 +86,7 @@ public interface ConsumerFactory<K, V> {
 			@Nullable String clientIdSuffix);
 
 	/**
+	 * 创建一个消费者，使用指定的组id，使用指定的配置并对客户端id追加前缀
 	 * Create a consumer with an explicit group id; in addition, the
 	 * client id suffix is appended to the clientIdPrefix which overrides the
 	 * {@code client.id} property, if present. In addition, consumer properties can
@@ -99,13 +105,16 @@ public interface ConsumerFactory<K, V> {
 	}
 
 	/**
+	 * 返回此工厂创建的消费者是不是自动提交的
 	 * Return true if consumers created by this factory use auto commit.
 	 * @return true if auto commit.
 	 */
 	boolean isAutoCommit();
 
 	/**
+	 * 返回工厂的配置，此配置是无法修改的
 	 * Return an unmodifiable reference to the configuration map for this factory.
+	 * 对克隆工厂很有用
 	 * Useful for cloning to make a similar factory.
 	 * @return the configs.
 	 * @since 2.0
@@ -115,6 +124,7 @@ public interface ConsumerFactory<K, V> {
 	}
 
 	/**
+	 * 返回配置key的反序列化程序（如果在属性值是作为对象而不是类名提供的）
 	 * Return the configured key deserializer (if provided as an object instead
 	 * of a class name in the properties).
 	 * @return the deserializer.
@@ -126,6 +136,7 @@ public interface ConsumerFactory<K, V> {
 	}
 
 	/**
+	 * 返回配置value的反序列化程序（如果在属性值是作为对象而不是类名提供的）
 	 * Return the configured value deserializer (if provided as an object instead
 	 * of a class name in the properties).
 	 * @return the deserializer.

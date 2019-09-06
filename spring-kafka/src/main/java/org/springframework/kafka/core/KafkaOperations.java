@@ -32,6 +32,7 @@ import org.springframework.messaging.Message;
 import org.springframework.util.concurrent.ListenableFuture;
 
 /**
+ * 基础的kafka操作
  * The basic Kafka operations contract returning {@link ListenableFuture}s.
  *
  * @param <K> the key type.
@@ -52,6 +53,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 public interface KafkaOperations<K, V> {
 
 	/**
+	 * 发送数据到默认的topic，不指定key和分区
 	 * Send the data to the default topic with no key or partition.
 	 * @param data The data.
 	 * @return a Future for the {@link SendResult}.
@@ -59,6 +61,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> sendDefault(V data);
 
 	/**
+	 * 发送数据到默认的topic，指定key不使用分区
 	 * Send the data to the default topic with the provided key and no partition.
 	 * @param key the key.
 	 * @param data The data.
@@ -67,6 +70,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> sendDefault(K key, V data);
 
 	/**
+	 * 发送数据到默认的topic，指定key和分区
 	 * Send the data to the default topic with the provided key and partition.
 	 * @param partition the partition.
 	 * @param key the key.
@@ -76,6 +80,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> sendDefault(Integer partition, K key, V data);
 
 	/**
+	 * 发送数据到默认的topic，指定key和分区
 	 * Send the data to the default topic with the provided key and partition.
 	 * @param partition the partition.
 	 * @param timestamp the timestamp of the record.
@@ -87,6 +92,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> sendDefault(Integer partition, Long timestamp, K key, V data);
 
 	/**
+	 * 发送数据到指定的topic，不指定key和分区
 	 * Send the data to the provided topic with no key or partition.
 	 * @param topic the topic.
 	 * @param data The data.
@@ -95,6 +101,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> send(String topic, V data);
 
 	/**
+	 * 发送数据到指定的topic，指定key不使用分区
 	 * Send the data to the provided topic with the provided key and no partition.
 	 * @param topic the topic.
 	 * @param key the key.
@@ -104,6 +111,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> send(String topic, K key, V data);
 
 	/**
+	 * 发送数据到指定的topic，指定key和分区
 	 * Send the data to the provided topic with the provided key and partition.
 	 * @param topic the topic.
 	 * @param partition the partition.
@@ -114,6 +122,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> send(String topic, Integer partition, K key, V data);
 
 	/**
+	 * 发送数据到指定的topic，指定key和分区
 	 * Send the data to the provided topic with the provided key and partition.
 	 * @param topic the topic.
 	 * @param partition the partition.
@@ -126,6 +135,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> send(String topic, Integer partition, Long timestamp, K key, V data);
 
 	/**
+	 * 发送生产者消息
 	 * Send the provided {@link ProducerRecord}.
 	 * @param record the record.
 	 * @return a Future for the {@link SendResult}.
@@ -134,6 +144,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> send(ProducerRecord<K, V> record);
 
 	/**
+	 * 发送带路由信息头的消息，消息可以在发送前进行负载
 	 * Send a message with routing information in message headers. The message payload
 	 * may be converted before sending.
 	 * @param message the message to send.
@@ -145,6 +156,7 @@ public interface KafkaOperations<K, V> {
 	ListenableFuture<SendResult<K, V>> send(Message<?> message);
 
 	/**
+	 * 主题分区信息
 	 * See {@link Producer#partitionsFor(String)}.
 	 * @param topic the topic.
 	 * @return the partition info.
@@ -153,6 +165,7 @@ public interface KafkaOperations<K, V> {
 	List<PartitionInfo> partitionsFor(String topic);
 
 	/**
+	 * 返回生产者维护的内部信息
 	 * See {@link Producer#metrics()}.
 	 * @return the metrics.
 	 * @since 1.1
@@ -160,6 +173,7 @@ public interface KafkaOperations<K, V> {
 	Map<MetricName, ? extends Metric> metrics();
 
 	/**
+	 * 在生产者中执行任意操作并返回
 	 * Execute some arbitrary operation(s) on the producer and return the result.
 	 * @param callback the callback.
 	 * @param <T> the result type.
@@ -169,6 +183,7 @@ public interface KafkaOperations<K, V> {
 	<T> T execute(ProducerCallback<K, V, T> callback);
 
 	/**
+	 * 在生产者中执行任意操作并返回，操作在本地事务中进行，不参与全局事务
 	 * Execute some arbitrary operation(s) on the operations and return the result.
 	 * The operations are invoked within a local transaction and do not participate
 	 * in a global transaction (if present).
@@ -180,11 +195,14 @@ public interface KafkaOperations<K, V> {
 	<T> T executeInTransaction(OperationsCallback<K, V, T> callback);
 
 	/**
+	 * 刷新生产者
 	 * Flush the producer.
 	 */
 	void flush();
 
 	/**
+	 * 在事务运行中，发送消费者的偏移量到事务中，事务id从KafkaUtils.getConsumerGroupId中获得，
+	 * 如果是在监听容器线程中调用则不用调用该方法，容器将负责发送偏移量到事务
 	 * When running in a transaction, send the consumer offset(s) to the transaction. The
 	 * group id is obtained from
 	 * {@link org.springframework.kafka.support.KafkaUtils#getConsumerGroupId()}. It is
@@ -198,6 +216,8 @@ public interface KafkaOperations<K, V> {
 	void sendOffsetsToTransaction(Map<TopicPartition, OffsetAndMetadata> offsets);
 
 	/**
+	 * 在事务运行中，发送消费组的偏移量到事务中，事务id从KafkaUtils.getConsumerGroupId中获得，
+	 * 	 * 如果是在监听容器线程中调用则不用调用该方法，容器将负责发送偏移量到事务
 	 * When running in a transaction, send the consumer offset(s) to the transaction. It
 	 * is not necessary to call this method if the operations are invoked on a listener
 	 * container thread (and the listener container is configured with a
@@ -210,6 +230,7 @@ public interface KafkaOperations<K, V> {
 	void sendOffsetsToTransaction(Map<TopicPartition, OffsetAndMetadata> offsets, String consumerGroupId);
 
 	/**
+	 * 返回是否支持事务
 	 * Return true if the implementation supports transactions (has a transaction-capable
 	 * producer factory).
 	 * @return true or false.
@@ -218,6 +239,7 @@ public interface KafkaOperations<K, V> {
 	boolean isTransactional();
 
 	/**
+	 * 对生产者执行任意操作的回调
 	 * A callback for executing arbitrary operations on the {@link Producer}.
 	 * @param <K> the key type.
 	 * @param <V> the value type.
@@ -231,6 +253,7 @@ public interface KafkaOperations<K, V> {
 	}
 
 	/**
+	 * 对kafka执行基础操作的回调
 	 * A callback for executing arbitrary operations on the {@link KafkaOperations}.
 	 * @param <K> the key type.
 	 * @param <V> the value type.

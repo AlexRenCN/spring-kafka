@@ -20,6 +20,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
+ * 次监听用于处理发送的kafka消息，只会调用其中的一个方法，取决于写入的消息是否已经被确认
  * Listener for handling outbound Kafka messages. Exactly one of its methods will be invoked, depending on whether
  * the write has been acknowledged or not.
  *
@@ -38,6 +39,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 public interface ProducerListener<K, V> {
 
 	/**
+	 * 在消息发送成功之后调用
 	 * Invoked after the successful send of a message (that is, after it has been acknowledged by the broker).
 	 * @param producerRecord the actual sent record
 	 * @param recordMetadata the result of the successful send operation
@@ -48,6 +50,7 @@ public interface ProducerListener<K, V> {
 	}
 
 	/**
+	 * 在消息发送成功之后调用 如果接受ProducerRecord的方法被重写则不会调用该方法
 	 * Invoked after the successful send of a message (that is, after it has been acknowledged by the broker).
 	 * If the method receiving the ProducerRecord is overridden, this method won't be called
 	 * @param topic the destination topic
@@ -60,6 +63,7 @@ public interface ProducerListener<K, V> {
 	}
 
 	/**
+	 * 在消息发送失败之后调用
 	 * Invoked after an attempt to send a message has failed.
 	 * @param producerRecord the failed record
 	 * @param exception the exception thrown

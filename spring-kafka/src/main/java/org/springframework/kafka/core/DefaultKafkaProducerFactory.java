@@ -61,6 +61,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
+ * 默认生产者工厂
  * The {@link ProducerFactory} implementation for a {@code singleton} shared {@link Producer} instance.
  * <p>
  * This implementation will return the same {@link Producer} instance (if transactions are
@@ -192,20 +193,34 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 		}
 	}
 
+	/**
+	 * 设置上下文
+	 * @param applicationContext
+	 * @throws BeansException
+	 */
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
 	}
 
+	/**
+	 * 设置key序列化工具
+	 * @param keySerializer
+	 */
 	public void setKeySerializer(@Nullable Serializer<K> keySerializer) {
 		this.keySerializerSupplier = () -> keySerializer;
 	}
 
+	/**
+	 * 设置value序列化工具
+	 * @param valueSerializer
+	 */
 	public void setValueSerializer(@Nullable Serializer<V> valueSerializer) {
 		this.valueSerializerSupplier = () -> valueSerializer;
 	}
 
 	/**
+	 * 通过工厂关闭生产者等待的时长
 	 * The time to wait when physically closing the producer via the factory rather than
 	 * closing the producer itself (when {@link #reset()}, {@link #destroy()
 	 * #closeProducerFor(String)}, or {@link #closeThreadBoundProducer()} are invoked).
@@ -218,6 +233,7 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 	}
 
 	/**
+	 * 设置事务id前缀
 	 * Set a prefix for the {@link ProducerConfig#TRANSACTIONAL_ID_CONFIG} config. By
 	 * default a {@link ProducerConfig#TRANSACTIONAL_ID_CONFIG} value from configs is used
 	 * as a prefix in the target producer configs.
@@ -235,6 +251,7 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 	}
 
 	/**
+	 * 设置为true，每个线程有一个生产者，否则所有线程共享单例的生产者
 	 * Set to true to create a producer per thread instead of singleton that is shared by
 	 * all clients. Clients <b>must</b> call {@link #closeThreadBoundProducer()} to
 	 * physically close the producer when it is no longer needed. These producers will not
@@ -249,6 +266,7 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 	}
 
 	/**
+	 * 设置为false，还原行为到为每一个生产者递增事务ID而不是为每个组/主题/分区递增事务id
 	 * Set to false to revert to the previous behavior of a simple incrementing
 	 * transactional.id suffix for each producer instead of maintaining a producer
 	 * for each group/topic/partition.
@@ -270,7 +288,9 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 	}
 
 	/**
+	 * 返回当前工厂的配置且不可变
 	 * Return an unmodifiable reference to the configuration map for this factory.
+	 * 对应工厂克隆很有用
 	 * Useful for cloning to make a similar factory.
 	 * @return the configs.
 	 * @since 1.3
@@ -280,6 +300,7 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 	}
 
 	/**
+	 * 设置为true的时候，生产者将确保写入的流中有每个消息的副本
 	 * When set to 'true', the producer will ensure that exactly one copy of each message is written in the stream.
 	 */
 	private void enableIdempotentBehaviour() {
@@ -290,23 +311,36 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 		}
 	}
 
+	/**
+	 * 是否启动事务
+	 * @return
+	 */
 	@Override
 	public boolean transactionCapable() {
+		//有事务id前缀就开启事务
 		return this.transactionIdPrefix != null;
 	}
 
+	/**
+	 * 销毁bean
+	 */
 	@SuppressWarnings("resource")
 	@Override
 	public void destroy() {
+		//保存当前创建的生产者
 		CloseSafeProducer<K, V> producerToClose = this.producer;
+		//设置当前没有创建生产者
 		this.producer = null;
 		if (producerToClose != null) {
+			//如果保存创建的生产者不为空，则关闭它
 			producerToClose.getDelegate().close(this.physicalCloseTimeout);
 		}
+		//获取缓存中的所有生产者
 		this.cache.values().forEach(queue -> {
 			CloseSafeProducer<K, V> next = queue.poll();
 			while (next != null) {
 				try {
+					//关闭缓存中的所有生产者
 					next.getDelegate().close(this.physicalCloseTimeout);
 				}
 				catch (Exception e) {
@@ -315,8 +349,10 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 				next = queue.poll();
 			}
 		});
+		//清空缓存数据
 		this.cache.clear();
 		synchronized (this.consumerProducers) {
+			// TODO 这是个什么鬼
 			this.consumerProducers.forEach(
 					(k, v) -> v.getDelegate().close(this.physicalCloseTimeout));
 			this.consumerProducers.clear();
@@ -326,17 +362,20 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 	@Override
 	public void onApplicationEvent(ContextStoppedEvent event) {
 		if (event.getApplicationContext().equals(this.applicationContext)) {
+			//关闭生产者清除事务缓存
 			reset();
 		}
 	}
 
 	/**
+	 * 关闭生产者清除事务缓存
 	 * Close the {@link Producer}(s) and clear the cache of transactional
 	 * {@link Producer}(s).
 	 * @since 2.2
 	 */
 	public void reset() {
 		try {
+			//销毁bean
 			destroy();
 		}
 		catch (Exception e) {
@@ -361,8 +400,10 @@ public class DefaultKafkaProducerFactory<K, V> implements ProducerFactory<K, V>,
 
 	@Override
 	public Producer<K, V> createProducer(@Nullable String txIdPrefixArg) {
+		//事务前缀
 		String txIdPrefix = txIdPrefixArg == null ? this.transactionIdPrefix : txIdPrefixArg;
 		if (txIdPrefix != null) {
+			//如果有事务id前缀，则创建带事务的生产者
 			if (this.producerPerConsumerPartition) {
 				return createTransactionalProducerForPartition(txIdPrefix);
 			}

@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
+ * 默认消费者工厂
  * The {@link ConsumerFactory} implementation to produce new {@link Consumer} instances
  * for provided {@link Map} {@code configs} and optional {@link Deserializer}s on each {@link #createConsumer()}
  * invocation.
@@ -100,10 +101,18 @@ public class DefaultKafkaConsumerFactory<K, V> implements ConsumerFactory<K, V> 
 		this.valueDeserializerSupplier = valueDeserializerSupplier == null ? () -> null : valueDeserializerSupplier;
 	}
 
+	/**
+	 * key反序列化的生成器
+	 * @param keyDeserializer
+	 */
 	public void setKeyDeserializer(@Nullable Deserializer<K> keyDeserializer) {
 		this.keyDeserializerSupplier = () -> keyDeserializer;
 	}
 
+	/**
+	 * value反序列化的生成器
+	 * @param valueDeserializer
+	 */
 	public void setValueDeserializer(@Nullable Deserializer<V> valueDeserializer) {
 		this.valueDeserializerSupplier = () -> valueDeserializer;
 	}
@@ -147,19 +156,24 @@ public class DefaultKafkaConsumerFactory<K, V> implements ConsumerFactory<K, V> 
 	protected KafkaConsumer<K, V> createKafkaConsumer(@Nullable String groupId, @Nullable String clientIdPrefix,
 			@Nullable String clientIdSuffixArg, @Nullable Properties properties) {
 
+		//是否有kafka客户端前缀
 		boolean overrideClientIdPrefix = StringUtils.hasText(clientIdPrefix);
+		//如果没有后缀使用""代替
 		String clientIdSuffix = clientIdSuffixArg;
 		if (clientIdSuffix == null) {
 			clientIdSuffix = "";
 		}
+		//客户端id已存在  且   客户端后缀有值  且  有前缀  则需要修改客户端id
 		boolean shouldModifyClientId = (this.configs.containsKey(ConsumerConfig.CLIENT_ID_CONFIG)
 				&& StringUtils.hasText(clientIdSuffix)) || overrideClientIdPrefix;
 		if (groupId == null
 				&& (properties == null || properties.stringPropertyNames().size() == 0)
 				&& !shouldModifyClientId) {
+			//没分组没配置不用修改客户端id直接创建消费者
 			return createKafkaConsumer(this.configs);
 		}
 		else {
+			//用给定的配置类创建消费者
 			return createConsumerWithAdjustedProperties(groupId, clientIdPrefix, properties, overrideClientIdPrefix,
 					clientIdSuffix, shouldModifyClientId);
 		}
@@ -170,14 +184,18 @@ public class DefaultKafkaConsumerFactory<K, V> implements ConsumerFactory<K, V> 
 			boolean shouldModifyClientId) {
 
 		Map<String, Object> modifiedConfigs = new HashMap<>(this.configs);
+		//如果指定了消费组，就配置消费组
 		if (groupId != null) {
 			modifiedConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
 		}
+		//如果需要修改客户端id
 		if (shouldModifyClientId) {
+			//修改客户端id
 			modifiedConfigs.put(ConsumerConfig.CLIENT_ID_CONFIG,
 					(overrideClientIdPrefix ? clientIdPrefix
 							: modifiedConfigs.get(ConsumerConfig.CLIENT_ID_CONFIG)) + clientIdSuffix);
 		}
+		//配置不为空，过滤其他配置
 		if (properties != null) {
 			properties.stringPropertyNames()
 					.stream()
@@ -185,6 +203,7 @@ public class DefaultKafkaConsumerFactory<K, V> implements ConsumerFactory<K, V> 
 							&& !name.equals(ConsumerConfig.GROUP_ID_CONFIG))
 					.forEach(name -> modifiedConfigs.put(name, properties.getProperty(name)));
 		}
+		//创建消费者
 		return createKafkaConsumer(modifiedConfigs);
 	}
 

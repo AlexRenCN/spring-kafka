@@ -24,6 +24,7 @@ import org.springframework.transaction.support.ResourceHolderSupport;
 import org.springframework.util.Assert;
 
 /**
+ * kafka资源持有者
  * Kafka resource holder, wrapping a Kafka producer. KafkaTransactionManager binds instances of this
  * class to the thread, for a given Kafka producer factory.
  *
@@ -36,6 +37,9 @@ public class KafkaResourceHolder<K, V> extends ResourceHolderSupport {
 
 	private final Producer<K, V> producer;
 
+	/**
+	 * 关闭时等待的最长时间
+	 */
 	private final Duration closeTimeout;
 
 	/**
